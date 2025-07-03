@@ -25,8 +25,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
 
-
-
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
@@ -38,41 +36,52 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .role(Role.USER)
+                .role(Role.ADMIN)
                 .build();
 
         userRepository.save(user);
-        String token = jwtUtil.generateToken(user.getUsername());
-        String refreshTokenStr = UUID.randomUUID().toString();
-        return new AuthResponse(token, refreshTokenStr);
-    }
 
-    public AuthResponse login(String username, String password) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        String accessToken = jwtUtil.generateToken(user.getUsername());
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getRole());
         String refreshTokenStr = UUID.randomUUID().toString();
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(refreshTokenStr);
-        refreshToken.setUser(user);
-        refreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(refreshTokenStr)
+                .user(user)
+                .expiryDate(LocalDateTime.now().plusDays(7))
+                .revoked(false)
+                .build();
         refreshTokenRepository.save(refreshToken);
 
         return new AuthResponse(accessToken, refreshTokenStr);
-
     }
 
+    public AuthResponse login(String username, String password) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getRole());
+        String refreshTokenStr = UUID.randomUUID().toString();
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(refreshTokenStr)
+                .user(user)
+                .expiryDate(LocalDateTime.now().plusDays(7))
+                .revoked(false)
+                .build();
+        refreshTokenRepository.save(refreshToken);
+
+        return new AuthResponse(accessToken, refreshTokenStr);
+    }
 
     public Optional<String> refreshToken(String refreshToken) {
         return refreshTokenRepository.findByToken(refreshToken)
                 .filter(token -> !token.isRevoked())
                 .filter(token -> token.getExpiryDate().isAfter(LocalDateTime.now()))
                 .map(token -> {
-                    User user = token.getUser(); // тип User
-                    String newAccessToken = jwtUtil.generateToken(user.getUsername()); // передаем строку
-                    return newAccessToken;
+                    User user = token.getUser();
+                    return jwtUtil.generateToken(user.getUsername(), user.getRole());
                 });
     }
 
@@ -82,5 +91,4 @@ public class AuthService {
             refreshTokenRepository.save(token);
         });
     }
-
 }

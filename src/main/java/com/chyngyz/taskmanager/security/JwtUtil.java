@@ -16,7 +16,7 @@ public class JwtUtil {
     private final long jwtExpirationMs = 15 * 60 * 1000; // 15 минут
     private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    public String generateToken(String username , Role role) {
+    public String generateToken(String username, Role role) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role.name())
@@ -27,12 +27,11 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
@@ -56,6 +55,4 @@ public class JwtUtil {
                 .getBody();
         return claimsResolver.apply(claims);
     }
-
-
 }

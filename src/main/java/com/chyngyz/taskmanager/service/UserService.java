@@ -3,7 +3,9 @@ package com.chyngyz.taskmanager.service;
 import com.chyngyz.taskmanager.dto.UserRequest;
 import com.chyngyz.taskmanager.dto.UserResponse;
 import com.chyngyz.taskmanager.entity.User;
+import com.chyngyz.taskmanager.repository.RefreshTokenRepository;
 import com.chyngyz.taskmanager.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
@@ -38,9 +41,15 @@ public class UserService {
         return toResponse(userRepository.save(user));
     }
 
+    @Transactional
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        refreshTokenRepository.deleteAllByUser(user); // сначала удалить токены
+        userRepository.delete(user);                  // потом пользователя
     }
+
 
     private UserResponse toResponse(User user) {
         return new UserResponse(
