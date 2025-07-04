@@ -1,7 +1,9 @@
 package com.chyngyz.taskmanager.entity;
 
 public enum TaskStatus {
-    TODO,
+    NEW,
     IN_PROGRESS,
-    DONE
+    REVIEW,
+    COMPLETED,
+    CANCELED
 }
