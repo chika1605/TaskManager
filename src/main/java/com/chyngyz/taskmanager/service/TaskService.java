@@ -9,15 +9,14 @@ import com.chyngyz.taskmanager.repository.TaskRepository;
 import com.chyngyz.taskmanager.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -61,18 +60,15 @@ public class TaskService {
     public Page<TaskResponse> getTasks(int page, int size, String status, Long userId) {
         Pageable pageable = PageRequest.of(page, size);
 
-        // Получаем текущего пользователя и его роль
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         String role = currentUser.getRole().name();
 
-        // Если роль USER — показываем только его задачи, иначе — все
         if (role.equals("USER")) {
             return taskRepository.findByUser(currentUser, pageable)
                     .map(this::toResponse);
         } else {
-            // Можно фильтровать по статусу и по userId (если надо)
             if (status != null && userId != null) {
                 return taskRepository.findByStatusAndUserId(TaskStatus.valueOf(status), userId, pageable)
                         .map(this::toResponse);
@@ -85,7 +81,6 @@ public class TaskService {
                 return taskRepository.findByUserId(userId, pageable)
                         .map(this::toResponse);
             }
-            // Без фильтра
             return taskRepository.findAll(pageable).map(this::toResponse);
         }
     }
