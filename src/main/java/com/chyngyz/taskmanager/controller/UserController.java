@@ -3,16 +3,11 @@ package com.chyngyz.taskmanager.controller;
 import com.chyngyz.taskmanager.dto.UserResponse;
 import com.chyngyz.taskmanager.dto.UserRequest;
 import com.chyngyz.taskmanager.service.UserService;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,14 +23,16 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // Получить одного пользователя по ID
+    // Получить одного пользователя по ID (доступно всем аутентифицированным)
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // Обновить пользователя
+    // Обновить пользователя (доступно самому пользователю, MANAGER и ADMIN)
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or #id == authentication.principal.id")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
@@ -47,6 +44,4 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted");
     }
-
-
 }

@@ -2,21 +2,16 @@ package com.chyngyz.taskmanager.service;
 
 import com.chyngyz.taskmanager.dto.TaskRequest;
 import com.chyngyz.taskmanager.dto.TaskResponse;
-import com.chyngyz.taskmanager.entity.Task;
-import com.chyngyz.taskmanager.entity.TaskStatus;
-import com.chyngyz.taskmanager.entity.User;
+import com.chyngyz.taskmanager.entity.*;
 import com.chyngyz.taskmanager.repository.TaskRepository;
+import com.chyngyz.taskmanager.repository.TeamRepository;
 import com.chyngyz.taskmanager.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-
 
 @Service
 @RequiredArgsConstructor
@@ -24,65 +19,79 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final TeamRepository teamRepository;
 
-    public void createTask(TaskRequest request) {
+    public TaskResponse createTask(TaskRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        User creator = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Task task = new Task();
-        task.setTitle(request.getTitle());
-        task.setDescription(request.getDescription());
-        task.setStatus(request.getStatus());
-        task.setUser(user);
+        User assignedTo = null;
+        if (request.getAssignedToId() != null) {
+            assignedTo = userRepository.findById(request.getAssignedToId())
+                    .orElseThrow(() -> new EntityNotFoundException("Assigned user not found"));
+        }
+
+        Team team = null;
+        if (request.getTeamId() != null) {
+            team = teamRepository.findById(request.getTeamId())
+                    .orElse(null);
+        }
+
+        Task task = Task.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .status(request.getStatus())
+                .priority(request.getPriority())
+                .category(request.getCategory())
+                .createdBy(creator)
+                .assignedTo(assignedTo)
+                .team(team)
+                .deadline(request.getDeadline())
+                .build();
 
         taskRepository.save(task);
+        return toResponse(task);
     }
 
-    public void updateTask(Long id, TaskRequest request) {
+    public TaskResponse updateTask(Long id, TaskRequest request) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("Task not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Task not found"));
 
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setStatus(request.getStatus());
+        task.setPriority(request.getPriority());
+        task.setCategory(request.getCategory());
+        task.setDeadline(request.getDeadline());
 
-        taskRepository.save(task);
+        if (request.getAssignedToId() != null) {
+            User assignedTo = userRepository.findById(request.getAssignedToId())
+                    .orElseThrow(() -> new EntityNotFoundException("Assigned user not found"));
+            task.setAssignedTo(assignedTo);
+        }
+        if (request.getTeamId() != null) {
+            Team team = teamRepository.findById(request.getTeamId())
+                    .orElse(null);
+            task.setTeam(team);
+        }
+        return toResponse(taskRepository.save(task));
     }
 
     public void deleteTask(Long id) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("Task not found"));
-
-        taskRepository.delete(task);
+        taskRepository.deleteById(id);
     }
 
-    public Page<TaskResponse> getTasks(int page, int size, String status, Long userId) {
-        Pageable pageable = PageRequest.of(page, size);
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        String role = currentUser.getRole().name();
-
-        if (role.equals("USER")) {
-            return taskRepository.findByUser(currentUser, pageable)
-                    .map(this::toResponse);
+    // Пагинация, фильтрация, сортировка
+    public Page<TaskResponse> getTasks(String category, int page, int size, String sort) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        Page<Task> pageTasks;
+        if (category != null && !category.isEmpty()) {
+            pageTasks = taskRepository.findByCategory(category, pageable);
         } else {
-            if (status != null && userId != null) {
-                return taskRepository.findByStatusAndUserId(TaskStatus.valueOf(status), userId, pageable)
-                        .map(this::toResponse);
-            }
-            if (status != null) {
-                return taskRepository.findByStatus(TaskStatus.valueOf(status), pageable)
-                        .map(this::toResponse);
-            }
-            if (userId != null) {
-                return taskRepository.findByUserId(userId, pageable)
-                        .map(this::toResponse);
-            }
-            return taskRepository.findAll(pageable).map(this::toResponse);
+            pageTasks = taskRepository.findAll(pageable);
         }
+        return pageTasks.map(this::toResponse);
     }
 
     public TaskResponse getTaskById(Long id) {
@@ -103,7 +112,7 @@ public class TaskService {
                 .orElseThrow(() -> new EntityNotFoundException("Task not found"));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        task.setUser(user);
+        task.setAssignedTo(user);
         return toResponse(taskRepository.save(task));
     }
 
@@ -113,8 +122,14 @@ public class TaskService {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus())
-                .userId(task.getUser() != null ? task.getUser().getId() : null)
+                .priority(task.getPriority())
+                .category(task.getCategory())
+                .createdById(task.getCreatedBy() != null ? task.getCreatedBy().getId() : null)
+                .assignedToId(task.getAssignedTo() != null ? task.getAssignedTo().getId() : null)
+                .teamId(task.getTeam() != null ? task.getTeam().getId() : null)
+                .deadline(task.getDeadline())
+                .createdAt(task.getCreatedAt())
+                .updatedAt(task.getUpdatedAt())
                 .build();
     }
-
 }
