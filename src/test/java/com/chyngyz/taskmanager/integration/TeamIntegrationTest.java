@@ -146,7 +146,7 @@ public class TeamIntegrationTest {
         TeamRequest request = new TeamRequest();
         request.setName("Integration Team");
         request.setDescription("Integration testing");
-        request.setMemberIds(Set.of(1L)); // можно получить ID пользователя, если нужно
+        request.setMemberIds(Set.of(1L));
 
         String teamResponse = mockMvc.perform(post("/api/teams")
                         .header("Authorization", "Bearer " + token)
