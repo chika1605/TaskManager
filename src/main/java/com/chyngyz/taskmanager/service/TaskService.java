@@ -82,16 +82,41 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
-    // Пагинация, фильтрация, сортировка
-    public Page<TaskResponse> getTasks(String category, int page, int size, String sort) {
+    public Page<TaskResponse> getTasks(
+            String category,
+            TaskStatus status,
+            Integer priority,
+            Long assignedToId,
+            Long createdById,
+            Long teamId,
+            int page,
+            int size,
+            String sort
+    ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
-        Page<Task> pageTasks;
-        if (category != null && !category.isEmpty()) {
-            pageTasks = taskRepository.findByCategory(category, pageable);
+
+        // Простая логика: приоритет фильтров, можно переписать на Specification позже
+        Page<Task> tasks;
+
+        if (category != null && status != null) {
+            tasks = taskRepository.findByCategoryAndStatus(category, status, pageable);
+        } else if (category != null) {
+            tasks = taskRepository.findByCategory(category, pageable);
+        } else if (status != null) {
+            tasks = taskRepository.findByStatus(status, pageable);
+        } else if (priority != null) {
+            tasks = taskRepository.findByPriority(priority, pageable);
+        } else if (assignedToId != null) {
+            tasks = taskRepository.findByAssignedToId(assignedToId, pageable);
+        } else if (createdById != null) {
+            tasks = taskRepository.findByCreatedById(createdById, pageable);
+        } else if (teamId != null) {
+            tasks = taskRepository.findByTeamId(teamId, pageable);
         } else {
-            pageTasks = taskRepository.findAll(pageable);
+            tasks = taskRepository.findAll(pageable);
         }
-        return pageTasks.map(this::toResponse);
+
+        return tasks.map(this::toResponse);
     }
 
     public TaskResponse getTaskById(Long id) {

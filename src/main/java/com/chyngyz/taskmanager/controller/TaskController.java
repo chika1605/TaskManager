@@ -26,14 +26,20 @@ public class TaskController {
 
     // Получить задачи с фильтрацией и пагинацией и сортировкой
     @GetMapping
-    public ResponseEntity<Page<TaskResponse>> getTasks(
+    public Page<TaskResponse> getTasks(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) Integer priority,
+            @RequestParam(required = false) Long assignedToId,
+            @RequestParam(required = false) Long createdById,
+            @RequestParam(required = false) Long teamId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String category,
-            @RequestParam(defaultValue = "priority,desc") String sort // пример сортировки
+            @RequestParam(defaultValue = "createdAt") String sort
     ) {
-        return ResponseEntity.ok(taskService.getTasks(category, page, size, sort));
+        return taskService.getTasks(category, status, priority, assignedToId, createdById, teamId, page, size, sort);
     }
+
 
     // Обновить задачу
     @PutMapping("/{id}")
