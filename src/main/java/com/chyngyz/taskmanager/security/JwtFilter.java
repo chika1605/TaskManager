@@ -37,7 +37,6 @@ public class JwtFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String role = jwtUtil.extractRole(token);
 
-                // Добавляем роль в формате ROLE_ADMIN / ROLE_USER и т.д.
                 List<SimpleGrantedAuthority> authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + role)
                 );

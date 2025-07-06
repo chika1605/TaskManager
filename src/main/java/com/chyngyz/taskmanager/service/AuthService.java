@@ -10,6 +10,8 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -24,8 +26,11 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     public AuthResponse register(RegisterRequest request) {
+        logger.info("Attempting to register user: {}", request.getUsername());
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
@@ -51,15 +56,19 @@ public class AuthService {
                 .revoked(false)
                 .build();
         refreshTokenRepository.save(refreshToken);
+        logger.info("Refresh token created for user '{}'", user.getUsername());
 
         return new AuthResponse(accessToken, refreshTokenStr);
     }
 
     public AuthResponse login(String username, String password) {
+        logger.info("User '{}' attempting to log in", username);
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        logger.info("User '{}' logged in successfully", username);
 
         String accessToken = jwtUtil.generateToken(user.getUsername(), user.getRole());
         String refreshTokenStr = UUID.randomUUID().toString();
@@ -71,24 +80,29 @@ public class AuthService {
                 .revoked(false)
                 .build();
         refreshTokenRepository.save(refreshToken);
+        logger.info("Refresh token generated for '{}'", username);
 
         return new AuthResponse(accessToken, refreshTokenStr);
     }
 
     public Optional<String> refreshToken(String refreshToken) {
+        logger.info("Attempting to refresh access token using refresh token: {}", refreshToken);
         return refreshTokenRepository.findByToken(refreshToken)
                 .filter(token -> !token.isRevoked())
                 .filter(token -> token.getExpiryDate().isAfter(LocalDateTime.now()))
                 .map(token -> {
                     User user = token.getUser();
+                    logger.info("New access token issued for user '{}'", user.getUsername());
                     return jwtUtil.generateToken(user.getUsername(), user.getRole());
                 });
     }
 
     public void logout(String refreshToken) {
+        logger.info("Attempting to logout using refresh token: {}", refreshToken);
         refreshTokenRepository.findByToken(refreshToken).ifPresent(token -> {
             token.setRevoked(true);
             refreshTokenRepository.save(token);
+            logger.info("Refresh token revoked for user '{}'", token.getUser().getUsername());
         });
     }
 }

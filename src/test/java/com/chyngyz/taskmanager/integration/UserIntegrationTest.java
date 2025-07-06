@@ -60,22 +60,18 @@ public class UserIntegrationTest {
 
     @Test
     void getUserById_shouldReturnCorrectUser() throws Exception {
-        // 1. Регистрация
         String response = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(getRegisterRequest())))
                 .andReturn().getResponse().getContentAsString();
 
-        // 2. Достаем токен
         String token = objectMapper.readTree(response).get("token").asText();
 
-        // 3. Получаем список пользователей с токеном
         String usersJson = mockMvc.perform(get("/api/users")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        // 4. Ищем ID пользователя
         Long userId = null;
         for (var node : objectMapper.readTree(usersJson)) {
             if (node.get("username").asText().equals("testuser")) {
@@ -86,7 +82,6 @@ public class UserIntegrationTest {
 
         assert userId != null;
 
-        // 5. Получаем пользователя по id
         mockMvc.perform(get("/api/users/" + userId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -98,7 +93,6 @@ public class UserIntegrationTest {
 
     @Test
     void updateUser_shouldReturnUpdatedUser() throws Exception {
-        // Шаг 1: регистрация пользователя
         String registerResponse = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(getRegisterRequest())))
@@ -107,7 +101,6 @@ public class UserIntegrationTest {
 
         String token = objectMapper.readTree(registerResponse).get("token").asText();
 
-        // Шаг 2: получить список пользователей с токеном
         String usersJson = mockMvc.perform(get("/api/users")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -115,7 +108,6 @@ public class UserIntegrationTest {
 
         Long userId = objectMapper.readTree(usersJson).get(0).get("id").asLong();
 
-        // Шаг 3: отправка запроса на обновление пользователя с токеном
         UserRequest updateRequest = new UserRequest();
         updateRequest.setUsername("updateduser");
         updateRequest.setEmail("updated@example.com");
@@ -136,7 +128,6 @@ public class UserIntegrationTest {
 
     @Test
     void deleteUser_shouldReturnConfirmation() throws Exception {
-        // 1. Регистрируем пользователя
         String registerResponse = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(getRegisterRequest())))
@@ -145,7 +136,6 @@ public class UserIntegrationTest {
 
         String token = objectMapper.readTree(registerResponse).get("token").asText();
 
-        // 2. Получаем всех пользователей, чтобы взять id
         String usersResponse = mockMvc.perform(get("/api/users")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -153,7 +143,6 @@ public class UserIntegrationTest {
 
         Long userId = objectMapper.readTree(usersResponse).get(0).get("id").asLong();
 
-        // 3. Удаляем пользователя
         mockMvc.perform(delete("/api/users/" + userId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())

@@ -32,17 +32,14 @@ public class Task {
     @Column(length = 50)
     private String category;
 
-    // Кто создал
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
 
-    // Кому назначена задача (assigned_to)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to")
     private User assignedTo;
 
-    // На какую команду задача
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;

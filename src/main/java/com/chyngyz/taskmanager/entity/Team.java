@@ -24,12 +24,10 @@ public class Team {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Кто создал команду
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    // Множество участников через team_members
     @ManyToMany
     @JoinTable(
             name = "team_members",

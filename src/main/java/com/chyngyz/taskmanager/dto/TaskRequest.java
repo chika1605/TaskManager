@@ -12,7 +12,7 @@ public class TaskRequest {
     private TaskStatus status;
     private Integer priority;
     private String category;
-    private Long assignedToId;  // id пользователя, кому задача назначена
-    private Long teamId;        // id команды
+    private Long assignedToId;
+    private Long teamId;
     private LocalDateTime deadline;
 }

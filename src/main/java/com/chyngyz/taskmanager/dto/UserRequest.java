@@ -12,5 +12,5 @@ public class UserRequest {
     private String password;
     private String firstName;
     private String lastName;
-    private Role role; // если надо менять роль (например, только админ)
+    private Role role;
 }

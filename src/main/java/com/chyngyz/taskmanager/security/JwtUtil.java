@@ -13,7 +13,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    private final long jwtExpirationMs = 15 * 60 * 1000; // 15 минут
+    private final long jwtExpirationMs = 15 * 60 * 1000;
     private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     public String generateToken(String username, Role role) {

@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
@@ -17,59 +19,61 @@ import java.util.Set;
 public class TeamController {
 
     private final TeamService teamService;
+    private static final Logger logger = LoggerFactory.getLogger(TeamController.class);
 
-    // Создать команду (только ADMIN, MANAGER)
+
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public ResponseEntity<TeamResponse> createTeam(@RequestBody TeamRequest request) {
+        logger.info("Creating team with name: {}", request.getName());
         return ResponseEntity.ok(teamService.createTeam(request));
     }
 
-    // Получить все команды (для всех ролей)
     @GetMapping
     public ResponseEntity<List<TeamResponse>> getAllTeams() {
+        logger.info("Fetching all teams");
         return ResponseEntity.ok(teamService.getAllTeams());
     }
 
-    // Получить команду по ID (для всех ролей)
     @GetMapping("/{id}")
     public ResponseEntity<TeamResponse> getTeamById(@PathVariable Long id) {
+        logger.info("Fetching team by id: {}", id);
         return ResponseEntity.ok(teamService.getTeamById(id));
     }
 
-    // Обновить команду (только ADMIN, MANAGER)
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<TeamResponse> updateTeam(@PathVariable Long id, @RequestBody TeamRequest request) {
+        logger.info("Updating team id: {} with name: {}", id, request.getName());
         return ResponseEntity.ok(teamService.updateTeam(id, request));
     }
 
-    // Удалить команду (только ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTeam(@PathVariable Long id) {
+        logger.info("Deleting team with id: {}", id);
         teamService.deleteTeam(id);
         return ResponseEntity.ok().build();
     }
 
-    // Добавить участников в команду (ADMIN, MANAGER)
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/{id}/members")
     public ResponseEntity<Void> addMembersToTeam(
             @PathVariable Long id,
-            @RequestBody Set<Long> userIds // Согласовано с сервисом
+            @RequestBody Set<Long> userIds
     ) {
+        logger.info("Adding members to team id: {} -> userIds: {}", id, userIds);
         teamService.addMembers(id, userIds);
         return ResponseEntity.ok().build();
     }
 
-    // Удалить участника из команды (ADMIN, MANAGER)
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/{id}/members/{userId}")
     public ResponseEntity<Void> removeMember(
             @PathVariable Long id,
             @PathVariable Long userId
     ) {
+        logger.info("Removing user id: {} from team id: {}", userId, id);
         teamService.removeMember(id, userId);
         return ResponseEntity.ok().build();
     }

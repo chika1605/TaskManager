@@ -11,6 +11,8 @@ import com.chyngyz.taskmanager.repository.TeamRepository;
 import com.chyngyz.taskmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -21,62 +23,76 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final TaskRepository taskRepository;
     private final TeamRepository teamRepository;
 
     public List<UserResponse> getAllUsers() {
+        logger.info("Fetching all users");
         return userRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     public UserResponse getUserById(Long id) {
+        logger.info("Fetching user by ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    logger.error("User not found with ID: {}", id);
+                    return new UsernameNotFoundException("User not found");
+                });
         return toResponse(user);
     }
 
     public UserResponse updateUser(Long id, UserRequest request) {
+        logger.info("Updating user with ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    logger.error("User not found with ID: {}", id);
+                    return new UsernameNotFoundException("User not found");
+                });
 
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        // Можно добавить: user.setRole(request.getRole()); — если требуется
 
+        logger.info("User updated: {}", user.getUsername());
         return toResponse(userRepository.save(user));
     }
 
     @Transactional
     public void deleteUser(Long id) {
+        logger.warn("Deleting user with ID: {}", id);
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    logger.error("User not found with ID: {}", id);
+                    return new UsernameNotFoundException("User not found");
+                });
 
-        // 1. Удаляем или отвязываем задачи
         List<Task> tasks = taskRepository.findAllByAssignedTo(user);
         for (Task task : tasks) {
             task.setAssignedTo(null);
         }
         taskRepository.saveAll(tasks);
+        logger.info("Cleared user assignments from tasks");
 
-        // 2. Удаляем пользователя из команд (если связь через Team.members)
         List<Team> teams = teamRepository.findAllByMembersContains(user);
         for (Team team : teams) {
             team.getMembers().remove(user);
         }
         teamRepository.saveAll(teams);
+        logger.info("Removed user from teams");
 
-        // 3. Удаляем токены
         refreshTokenRepository.deleteAllByUser(user);
+        logger.info("Deleted user refresh tokens");
 
-        // 4. Удаляем пользователя
         userRepository.delete(user);
+        logger.info("User deleted: {}", user.getUsername());
     }
-
 
     private UserResponse toResponse(User user) {
         return UserResponse.builder()

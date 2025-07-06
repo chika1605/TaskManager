@@ -45,7 +45,6 @@ public class AuthIntegrationTest {
 
     @Test
     void loginUser_shouldReturnTokens() throws Exception {
-        // Сначала регистрируем пользователя
         RegisterRequest request = new RegisterRequest();
         request.setUsername("testuser2");
         request.setEmail("test2@example.com");
@@ -58,7 +57,6 @@ public class AuthIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        // Затем логинимся через JSON
         String loginJson = """
         {
             "username": "testuser2",
@@ -76,7 +74,6 @@ public class AuthIntegrationTest {
 
     @Test
     void refreshToken_shouldReturnNewAccessToken() throws Exception {
-        // Сначала регистрируем
         RegisterRequest request = new RegisterRequest();
         request.setUsername("testuser3");
         request.setEmail("test3@example.com");
@@ -92,7 +89,6 @@ public class AuthIntegrationTest {
 
         String refreshToken = objectMapper.readTree(response).get("refreshToken").asText();
 
-        // Обновляем access token
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
@@ -102,7 +98,6 @@ public class AuthIntegrationTest {
 
     @Test
     void logout_shouldRevokeRefreshToken() throws Exception {
-        // Регистрация нового пользователя
         RegisterRequest request = new RegisterRequest();
         request.setUsername("testuser4");
         request.setEmail("test4@example.com");
@@ -116,17 +111,14 @@ public class AuthIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        // Достаём refreshToken из ответа
         String refreshToken = objectMapper.readTree(registerResponse).get("refreshToken").asText();
 
-        // LOGOUT (отправляем refreshToken в JSON теле)
         mockMvc.perform(post("/api/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Logged out successfully"));
 
-        // REFRESH: должен вернуть 401 UNAUTHORIZED, refreshToken уже отозван
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
