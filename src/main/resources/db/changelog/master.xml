@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <include file="db/changelog/changeset/001-create-user.xml"/>
+    <include file="db/changelog/changeset/002-create-team.xml"/>
+    <include file="db/changelog/changeset/003-create-task.xml"/>
+    <include file="db/changelog/changeset/004-create-refresh-token.xml"/>
+    <include file="db/changelog/changeset/005-create-team-members.xml"/>
+
+</databaseChangeLog>
