@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="006-insert-admin-manager" author="chyngyz">
+
+        <insert tableName="users">
+            <column name="username" value="admin"/>
+            <column name="email" value="admin@example.com"/>
+            <column name="password" value="$2a$10$s0YeNO5ZxgJULm7iZvef3eAYL/NXgH9HcFLXcGzCyF3gDNNKzmH2i"/>
+            <column name="first_name" value="Admin"/>
+            <column name="last_name" value="System"/>
+            <column name="role" value="ADMIN"/>
+            <column name="created_at" valueDate="2025-07-07T00:00:00"/>
+            <column name="updated_at" valueDate="2025-07-07T00:00:00"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="username" value="manager"/>
+            <column name="email" value="manager@example.com"/>
+            <column name="password" value="$2a$10$VX.mrqUeJvazwZX8AbpGlOUKaDWx0n2c7ZQVEpN1j0AFzHa9V9BxW"/>
+            <column name="first_name" value="Team"/>
+            <column name="last_name" value="Manager"/>
+            <column name="role" value="MANAGER"/>
+            <column name="created_at" valueDate="2025-07-07T00:00:00"/>
+            <column name="updated_at" valueDate="2025-07-07T00:00:00"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

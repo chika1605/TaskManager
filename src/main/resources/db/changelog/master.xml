@@ -11,5 +11,7 @@
     <include file="db/changelog/changeset/003-create-task.xml"/>
     <include file="db/changelog/changeset/004-create-refresh-token.xml"/>
     <include file="db/changelog/changeset/005-create-team-members.xml"/>
+    <include file="db/changelog/changeset/006-insert-admin-manager.xml"/>
+
 
 </databaseChangeLog>
