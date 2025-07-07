@@ -12,6 +12,9 @@
     <include file="db/changelog/changeset/004-create-refresh-token.xml"/>
     <include file="db/changelog/changeset/005-create-team-members.xml"/>
     <include file="db/changelog/changeset/006-insert-admin-manager.xml"/>
+    <include file="db/changelog/changeset/007-insert-initial-teams.xml"/>
+    <include file="db/changelog/changeset/008-insert-initial-tasks.xml"/>
+    <include file="db/changelog/changeset/009-insert-initial-team-members.xml"/>
 
 
 </databaseChangeLog>

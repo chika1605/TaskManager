@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="007-insert-initial-teams" author="chyngyz">
+
+        <insert tableName="teams">
+            <column name="name" value="Backend Team"/>
+            <column name="description" value="Responsible for backend APIs and logic"/>
+            <column name="created_by" valueNumeric="1"/>
+            <column name="created_at" valueDate="2025-07-07T00:00:00"/>
+            <column name="updated_at" valueDate="2025-07-07T00:00:00"/>
+        </insert>
+
+        <insert tableName="teams">
+            <column name="name" value="Frontend Team"/>
+            <column name="description" value="Handles the UI and frontend logic"/>
+            <column name="created_by" valueNumeric="2"/>
+            <column name="created_at" valueDate="2025-07-07T00:00:00"/>
+            <column name="updated_at" valueDate="2025-07-07T00:00:00"/>
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>

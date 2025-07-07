@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="008-insert-initial-tasks" author="chyngyz">
+
+        <insert tableName="tasks">
+            <column name="title" value="Implement authentication"/>
+            <column name="description" value="Add login, register, JWT, and logout endpoints"/>
+            <column name="status" value="IN_PROGRESS"/>
+            <column name="priority" valueNumeric="1"/>
+            <column name="category" value="Backend"/>
+            <column name="created_by" valueNumeric="1"/>
+            <column name="assigned_to" valueNumeric="2"/>
+            <column name="team_id" valueNumeric="1"/>
+            <column name="deadline" valueDate="2025-07-15T00:00:00"/>
+            <column name="created_at" valueDate="2025-07-07T00:00:00"/>
+            <column name="updated_at" valueDate="2025-07-07T00:00:00"/>
+        </insert>
+
+        <insert tableName="tasks">
+            <column name="title" value="Design dashboard layout"/>
+            <column name="description" value="Create initial UI layout for dashboard screen"/>
+            <column name="status" value="TODO"/>
+            <column name="priority" valueNumeric="2"/>
+            <column name="category" value="Frontend"/>
+            <column name="created_by" valueNumeric="2"/>
+            <column name="assigned_to" valueNumeric="2"/>
+            <column name="team_id" valueNumeric="2"/>
+            <column name="deadline" valueDate="2025-07-20T00:00:00"/>
+            <column name="created_at" valueDate="2025-07-07T00:00:00"/>
+            <column name="updated_at" valueDate="2025-07-07T00:00:00"/>
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>
